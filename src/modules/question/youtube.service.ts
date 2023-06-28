@@ -1,7 +1,8 @@
-import { Config, ENV } from '@config/index'
+import { Config, ENV } from '../../config'
 import { Inject, Injectable } from '@nestjs/common'
 import { Question, VideoIdListResponse, VideoListResponse } from './interfaces'
 import axios from 'axios'
+import * as uniqid from 'uniqid'
 
 @Injectable()
 export class YouTubeService {
@@ -41,6 +42,7 @@ export class YouTubeService {
           const end = lines[i + 1] ? { minute: lines[i + 1][2], second: lines[i + 1][3] } : null
 
           questions.push({
+            id: uniqid(),
             videoId: item.id,
             time: { start, end },
             title

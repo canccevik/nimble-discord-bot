@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common'
 import { GatewayIntentBits } from 'discord.js'
 import { DiscordOptionsFactory, DiscordModuleOption } from '@discord-nestjs/core'
-import { Config, ENV } from '@config/index'
+import { Config, ENV } from '../../config'
 
 @Injectable()
 export class DiscordConfigService implements DiscordOptionsFactory {

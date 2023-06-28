@@ -1,4 +1,5 @@
 export interface Question {
+  id: string
   videoId: string
   title: string
   time: {
