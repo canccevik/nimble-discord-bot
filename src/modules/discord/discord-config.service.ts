@@ -11,7 +11,11 @@ export class DiscordConfigService implements DiscordOptionsFactory {
     return {
       token: this.config.BOT_TOKEN,
       discordClientOptions: {
-        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
+        intents: [
+          GatewayIntentBits.Guilds,
+          GatewayIntentBits.GuildMessages,
+          GatewayIntentBits.GuildVoiceStates
+        ]
       },
       failOnLogin: true
     }
