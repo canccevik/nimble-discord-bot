@@ -1,6 +1,14 @@
-import { SlashCommandPipe } from '@discord-nestjs/common'
-import { Command, Handler, InteractionEvent, Param, ParamType } from '@discord-nestjs/core'
-import { Injectable } from '@nestjs/common'
+import { CollectorInterceptor, SlashCommandPipe } from '@discord-nestjs/common'
+import {
+  Command,
+  Handler,
+  InteractionEvent,
+  Param,
+  ParamType,
+  UseCollectors
+} from '@discord-nestjs/core'
+import { UseInterceptors } from '@nestjs/common'
+import { QuestionService } from '../../../question/question.service'
 import {
   InteractionReplyOptions,
   EmbedBuilder,
@@ -10,7 +18,7 @@ import {
   MessageActionRowComponentBuilder,
   APIEmbedField
 } from 'discord.js'
-import { QuestionService } from '../../question/question.service'
+import { QuestionsInteractionCollector } from './questions-interaction.collector'
 
 class QuestionsDto {
   @Param({
@@ -22,11 +30,12 @@ class QuestionsDto {
   public page: number
 }
 
-@Injectable()
 @Command({
   name: 'sorular',
   description: 'Soruları sayfalar şeklinde listeler.'
 })
+@UseInterceptors(CollectorInterceptor)
+@UseCollectors(QuestionsInteractionCollector)
 export class QuestionsCommand {
   constructor(private readonly questionService: QuestionService) {}
 

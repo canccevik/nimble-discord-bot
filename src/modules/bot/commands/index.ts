@@ -1,3 +1,3 @@
-import { QuestionsCommand } from './questions.command'
+import { QuestionsCommand } from './questions'
 
 export const commands = [QuestionsCommand]
