@@ -1,4 +1,7 @@
 import { CollectorInterceptor, SlashCommandPipe } from '@discord-nestjs/common'
+import { UseInterceptors } from '@nestjs/common'
+import { QuestionService } from '../../../question/question.service'
+import { QuestionsInteractionCollector } from './questions-interaction.collector'
 import {
   Command,
   Handler,
@@ -7,8 +10,6 @@ import {
   ParamType,
   UseCollectors
 } from '@discord-nestjs/core'
-import { UseInterceptors } from '@nestjs/common'
-import { QuestionService } from '../../../question/question.service'
 import {
   InteractionReplyOptions,
   EmbedBuilder,
@@ -18,7 +19,6 @@ import {
   MessageActionRowComponentBuilder,
   APIEmbedField
 } from 'discord.js'
-import { QuestionsInteractionCollector } from './questions-interaction.collector'
 
 class QuestionsDto {
   @Param({

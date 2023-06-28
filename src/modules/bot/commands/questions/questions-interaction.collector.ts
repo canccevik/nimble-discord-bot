@@ -1,5 +1,6 @@
 import { Injectable, Scope } from '@nestjs/common'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
+import { QuestionService } from '../../../question/question.service'
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -13,9 +14,12 @@ import {
 @Injectable({ scope: Scope.REQUEST })
 @InteractionEventCollector({ time: 15000 })
 export class QuestionsInteractionCollector {
+  private selectedQuestionId: string
+
   constructor(
     @InjectCauseEvent()
-    private readonly causeInteraction: ChatInputCommandInteraction
+    private readonly causeInteraction: ChatInputCommandInteraction,
+    private readonly questionService: QuestionService
   ) {}
 
   @Filter()
@@ -27,6 +31,32 @@ export class QuestionsInteractionCollector {
   public async onCollect(
     interaction: StringSelectMenuInteraction | ButtonInteraction
   ): Promise<void> {
+    if (interaction.isStringSelectMenu()) {
+      this.selectedQuestionId = interaction.values[0]
+
+      const buttonRow = this.buildButtonRow()
+
+      await interaction.update({
+        content: 'Bir aksiyon seçin:',
+        components: [buttonRow],
+        embeds: []
+      })
+      return
+    }
+
+    const selectedQuestion = this.questionService.getQuestionById(this.selectedQuestionId)
+
+    if (interaction.customId === 'watch-button') {
+      const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.time.start.minute}m${selectedQuestion.time.start.second}s`
+
+      await interaction.reply({
+        content: videoLink,
+        components: []
+      })
+    }
+  }
+
+  private buildButtonRow(): ActionRowBuilder<MessageActionRowComponentBuilder> {
     const watchButton = new ButtonBuilder()
       .setCustomId('watch-button')
       .setLabel('İzle')
@@ -37,15 +67,9 @@ export class QuestionsInteractionCollector {
       .setLabel('Dinle')
       .setStyle(ButtonStyle.Success)
 
-    const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+    return new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
       watchButton,
       listenButton
     )
-
-    await interaction.update({
-      content: 'Bir aksiyon seçin:',
-      components: [row],
-      embeds: []
-    })
   }
 }

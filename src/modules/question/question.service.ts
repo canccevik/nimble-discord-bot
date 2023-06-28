@@ -24,4 +24,8 @@ export class QuestionService {
   public getQuestionCount(): number {
     return questions.length || 0
   }
+
+  public getQuestionById(id: string): Question {
+    return questions.find((question) => question.id === id)
+  }
 }
