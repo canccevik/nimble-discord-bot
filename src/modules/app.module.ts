@@ -3,6 +3,7 @@ import { EnvalidModule } from 'nestjs-envalid'
 import { validators } from '@config/index'
 import { DiscordModule } from './discord/discord.module'
 import { BotModule } from './bot/bot.module'
+import { QuestionModule } from './question/question.module'
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { BotModule } from './bot/bot.module'
       isGlobal: true
     }),
     DiscordModule,
-    BotModule
+    BotModule,
+    QuestionModule
   ]
 })
 export class AppModule {}

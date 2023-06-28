@@ -16,8 +16,7 @@ module.exports = {
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/explicit-member-accessibility': 'off',
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    'no-console': ['error']
+    '@typescript-eslint/explicit-function-return-type': 'off'
   },
   overrides: [
     {
