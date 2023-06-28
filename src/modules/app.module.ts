@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { EnvalidModule } from 'nestjs-envalid'
 import { validators } from '@config/index'
+import { DiscordModule } from './discord/discord.module'
 
 @Module({
   imports: [
@@ -8,7 +9,8 @@ import { validators } from '@config/index'
       validators,
       useDotenv: true,
       isGlobal: true
-    })
+    }),
+    DiscordModule
   ]
 })
 export class AppModule {}

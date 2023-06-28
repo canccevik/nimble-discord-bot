@@ -1,6 +1,8 @@
-import { makeValidators, Static } from 'nestjs-envalid'
+import { makeValidators, Static, str } from 'nestjs-envalid'
 
-const config = {}
+const config = {
+  BOT_TOKEN: str()
+}
 
 export const validators = makeValidators(config)
 
