@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { EnvalidModule } from 'nestjs-envalid'
 import { validators } from '@config/index'
 import { DiscordModule } from './discord/discord.module'
+import { BotModule } from './bot/bot.module'
 
 @Module({
   imports: [
@@ -10,7 +11,8 @@ import { DiscordModule } from './discord/discord.module'
       useDotenv: true,
       isGlobal: true
     }),
-    DiscordModule
+    DiscordModule,
+    BotModule
   ]
 })
 export class AppModule {}
