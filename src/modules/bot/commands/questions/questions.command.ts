@@ -2,6 +2,7 @@ import { CollectorInterceptor, SlashCommandPipe } from '@discord-nestjs/common'
 import { UseInterceptors } from '@nestjs/common'
 import { QuestionService } from '../../../question/question.service'
 import { QuestionsInteractionCollector } from './questions-interaction.collector'
+import { Question } from '../../../question/interfaces'
 import {
   Command,
   Handler,
@@ -17,7 +18,9 @@ import {
   StringSelectMenuOptionBuilder,
   ActionRowBuilder,
   MessageActionRowComponentBuilder,
-  APIEmbedField
+  APIEmbedField,
+  ButtonBuilder,
+  ButtonStyle
 } from 'discord.js'
 
 class QuestionsDto {
@@ -52,6 +55,17 @@ export class QuestionsCommand {
       }
     }
 
+    const embed = this.buildEmbed(questions, totalResultCount)
+    const buttonRow = this.buildButtonRow()
+    const selectionRow = this.buildSelectionRow(questions)
+
+    return {
+      embeds: [embed],
+      components: [buttonRow, selectionRow]
+    }
+  }
+
+  private buildEmbed(questions: Question[], totalResultCount: number): EmbedBuilder {
     const embedContent: APIEmbedField[] = questions.map((question, i) => {
       const { start, end } = question.time
       return {
@@ -68,7 +82,29 @@ export class QuestionsCommand {
           0 * questions.length + questions.length
         } aralığı gösteriliyor.`
       })
+    return embed
+  }
 
+  private buildButtonRow(): ActionRowBuilder<MessageActionRowComponentBuilder> {
+    const previousPageButton = new ButtonBuilder()
+      .setCustomId('previous-page-button')
+      .setLabel('Geri')
+      .setStyle(ButtonStyle.Primary)
+
+    const nextPageButton = new ButtonBuilder()
+      .setCustomId('next-page-button')
+      .setLabel('İleri')
+      .setStyle(ButtonStyle.Primary)
+
+    return new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+      previousPageButton,
+      nextPageButton
+    )
+  }
+
+  private buildSelectionRow(
+    questions: Question[]
+  ): ActionRowBuilder<MessageActionRowComponentBuilder> {
     const select = new StringSelectMenuBuilder()
       .setCustomId('select-question')
       .setPlaceholder('Seçim yap')
@@ -79,11 +115,6 @@ export class QuestionsCommand {
         })
       )
 
-    const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(select)
-
-    return {
-      embeds: [embed],
-      components: [row]
-    }
+    return new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(select)
   }
 }
