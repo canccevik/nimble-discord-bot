@@ -49,7 +49,7 @@ export class QuestionsCommand {
       const { start, end } = question.time
       return {
         name: `**${page * 10 + i + 1}.** ${question.title}`,
-        value: `> ${start.minute}:${start.second}-${end?.minute}:${end?.second}`
+        value: `> ${start.minute}:${start.second}-${end ? `${end?.minute}:${end?.second}` : '???'}`
       }
     })
 

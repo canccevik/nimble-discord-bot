@@ -1,6 +1,6 @@
 import { Command, Handler, InteractionEvent } from '@discord-nestjs/core'
 import { Interaction } from 'discord.js'
-import { getVoiceConnection } from '@discordjs/voice'
+import { VoiceConnectionStatus, getVoiceConnection } from '@discordjs/voice'
 
 @Command({
   name: 'durdur',
@@ -14,6 +14,8 @@ export class StopCommand {
     if (!voiceConnection) {
       return `Zaten bir ses kanalında değilim! <@${interaction.user.id}>`
     }
+
+    if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
 
     voiceConnection.destroy()
 

@@ -1,7 +1,12 @@
 import { Injectable, Scope } from '@nestjs/common'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
 import { QuestionService } from '../../../question/question.service'
-import { createAudioResource, createAudioPlayer, NoSubscriberBehavior } from '@discordjs/voice'
+import {
+  createAudioResource,
+  createAudioPlayer,
+  NoSubscriberBehavior,
+  VoiceConnectionStatus
+} from '@discordjs/voice'
 import { joinVoiceChannel } from '@discordjs/voice'
 import * as play from 'play-dl'
 import {
@@ -63,6 +68,7 @@ export class QuestionsInteractionCollector {
     const watchButton = new ButtonBuilder()
       .setCustomId('watch-button')
       .setLabel('İzle')
+
       .setStyle(ButtonStyle.Primary)
 
     const listenButton = new ButtonBuilder()
@@ -87,7 +93,7 @@ export class QuestionsInteractionCollector {
     const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.time.start.minute}m${selectedQuestion.time.start.second}s`
 
     await interaction.reply({
-      content: `Şu sorunun yanıtını aşağıdan izleyebilirsiniz: **${selectedQuestion.title} \n ${videoLink}**`,
+      content: `Şu sorunun yanıtını aşağıdan izleyebilirsiniz: **${selectedQuestion.title}** \n\n${videoLink}`,
       components: []
     })
   }
@@ -98,8 +104,9 @@ export class QuestionsInteractionCollector {
     const startTimeInSeconds =
       Number(selectedQuestion.time.start.minute) * 60 + Number(selectedQuestion.time.start.second)
     const endTimeInMiliseconds =
-      Number(selectedQuestion.time.start.minute) * 60000 +
-      Number(selectedQuestion.time.start.second) * 1000
+      Number(selectedQuestion.time.end.minute) * 60000 +
+      Number(selectedQuestion.time.end.second) * 1000
+    const answerTimeInMiliseconds = endTimeInMiliseconds - startTimeInSeconds * 1000
 
     const voiceConnection = joinVoiceChannel({
       channelId: (interaction.member as GuildMember).voice.channelId,
@@ -122,14 +129,16 @@ export class QuestionsInteractionCollector {
     voiceConnection.subscribe(player)
 
     setTimeout(() => {
+      if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
+
       player.stop(true)
       voiceConnection.destroy()
-    }, endTimeInMiliseconds)
+    }, answerTimeInMiliseconds)
 
     await interaction.reply({
-      content: `Şu sorunun yanıtı oynatılıyor: **${selectedQuestion.title}** \n ${
+      content: `Şu sorunun yanıtı oynatılıyor: **${selectedQuestion.title}** \n\n${
         !selectedQuestion.time.end
-          ? 'Not: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
+          ? '🚨 Uyarı: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
           : ''
       }`
     })
