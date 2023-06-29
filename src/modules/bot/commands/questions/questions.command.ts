@@ -22,12 +22,11 @@ import {
 
 class QuestionsDto {
   @Param({
-    name: 'page',
-    description: 'page',
-    type: ParamType.NUMBER,
-    minValue: 1
+    name: 'anahtar_kelime',
+    description: 'Soruları filtrelemek için kullanılacak anahtar kelime.',
+    type: ParamType.STRING
   })
-  public page: number
+  public searchKeyword: string
 }
 
 @Command({
@@ -41,36 +40,43 @@ export class QuestionsCommand {
 
   @Handler()
   public run(@InteractionEvent(SlashCommandPipe) dto: QuestionsDto): InteractionReplyOptions {
-    const page = dto.page ? dto.page - 1 : 0
-    const questions = this.questionService.getQuestionsByPage(page, 10)
-    const totalQuestionCount = this.questionService.getQuestionCount()
+    const { questions, totalResultCount } = this.questionService.getQuestionsByPage({
+      page: 0,
+      count: 10,
+      searchKeyword: dto.searchKeyword
+    })
+
+    if (dto.searchKeyword && totalResultCount === 0) {
+      return {
+        content: `**${dto.searchKeyword}** için bir sonuç bulunamadı!`
+      }
+    }
 
     const embedContent: APIEmbedField[] = questions.map((question, i) => {
       const { start, end } = question.time
       return {
-        name: `**${page * 10 + i + 1}.** ${question.title}`,
+        name: `**${0 * 10 + i + 1}.** ${question.title}`,
         value: `> ${start.minute}:${start.second}-${end ? `${end?.minute}:${end?.second}` : '???'}`
       }
     })
 
-    const embed = new EmbedBuilder().addFields(...embedContent)
-
-    if (questions.length) {
-      embed.setTitle(`Bir soru seçin`)
-      embed.setFooter({
-        text: `${totalQuestionCount} soru içerisinden ${page * questions.length + 1}-${
-          page * questions.length + questions.length
+    const embed = new EmbedBuilder()
+      .addFields(...embedContent)
+      .setTitle(`Bir soru seçin`)
+      .setFooter({
+        text: `${totalResultCount} soru içerisinden ${0 * questions.length + 1}-${
+          0 * questions.length + questions.length
         } aralığı gösteriliyor.`
       })
-    }
 
     const select = new StringSelectMenuBuilder()
       .setCustomId('select-question')
       .setPlaceholder('Seçim yap')
       .addOptions(
-        ...questions.map((question) =>
-          new StringSelectMenuOptionBuilder().setLabel(question.title).setValue(question.id)
-        )
+        ...questions.map((question) => {
+          const title = question.title.slice(0, 100)
+          return new StringSelectMenuOptionBuilder().setLabel(title).setValue(question.id)
+        })
       )
 
     const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(select)

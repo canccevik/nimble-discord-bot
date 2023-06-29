@@ -17,12 +17,25 @@ export class QuestionService {
     fs.appendFileSync(filePath, `${JSON.stringify(questions)}`)
   }
 
-  public getQuestionsByPage(page: number, count: number): Question[] {
-    return questions.slice(page * count, page * count + count) as unknown as Question[]
-  }
+  public getQuestionsByPage(options: { page: number; count: number; searchKeyword: string }): {
+    totalResultCount: number
+    questions: Question[]
+  } {
+    const results = options.searchKeyword
+      ? questions.filter((question) =>
+          question.title.toLowerCase().includes(options.searchKeyword.toLowerCase())
+        )
+      : questions
 
-  public getQuestionCount(): number {
-    return questions.length || 0
+    const filteredQuestions = results.slice(
+      options.page * options.count,
+      options.page * options.count + options.count
+    )
+
+    return {
+      totalResultCount: results.length || 0,
+      questions: filteredQuestions
+    }
   }
 
   public getQuestionById(id: string): Question {
