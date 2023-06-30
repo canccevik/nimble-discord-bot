@@ -1,5 +1,5 @@
 <p align="center">
-<img src="./.github/assets/nimble.webp" alt="Nimble Logo" width="100" />
+<img src="https://github.com/canccevik/nimble-discord-bot/blob/main/.github/assets/nimble.jpg" alt="Nimble Logo" width="100" />
 </p>
 
 <p align="center">🤖 A Discord bot for Nimble Türkiye server developed using <a href="https://nestjs.com/">NestJS</a> and <a href="https://discord.js.org/">discord.js</a>.</p>
