@@ -20,18 +20,19 @@
     "@discordjs/voice": "^0.16.0",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
+    "@nestjs/mongoose": "^10.0.0",
     "axios": "^1.4.0",
     "class-transformer": "^0.5.1",
     "discord.js": "^14.11.0",
     "dotenv": "^16.3.1",
     "envalid": "^7.3.1",
+    "mongoose": "^7.3.1",
     "nestjs-envalid": "^1.0.0",
     "play-dl": "^1.9.6",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
-    "tweetnacl": "^1.0.3",
-    "uniqid": "^5.4.0"
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",

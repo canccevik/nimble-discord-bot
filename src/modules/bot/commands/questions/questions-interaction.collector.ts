@@ -2,8 +2,10 @@ import * as play from 'play-dl'
 import { Injectable, Scope } from '@nestjs/common'
 import { joinVoiceChannel } from '@discordjs/voice'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
-import { QuestionService } from '../../../question/question.service'
 import { BaseQuestionsCommand } from './base-questions.command'
+import { InjectModel } from '@nestjs/mongoose'
+import { Question } from 'src/modules/database/schemas'
+import { Model } from 'mongoose'
 import {
   LISTEN_BUTTON,
   NEXT_PAGE_BUTTON,
@@ -44,8 +46,8 @@ export class QuestionsInteractionCollector {
   constructor(
     @InjectCauseEvent()
     private readonly causeInteraction: ChatInputCommandInteraction,
-    private readonly baseQuestionsCommand: BaseQuestionsCommand,
-    private readonly questionService: QuestionService
+    @InjectModel(Question.name) private readonly questionModel: Model<Question>,
+    private readonly baseQuestionsCommand: BaseQuestionsCommand
   ) {}
 
   @Filter()
@@ -91,8 +93,8 @@ export class QuestionsInteractionCollector {
   }
 
   private async handleWatchButtonInteraction(interaction: ButtonInteraction): Promise<void> {
-    const selectedQuestion = this.questionService.getQuestionById(this.selectedQuestionId)
-    const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.time.start.minute}m${selectedQuestion.time.start.second}s`
+    const selectedQuestion = await this.questionModel.findById(this.selectedQuestionId)
+    const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.endTime.second}s`
 
     await interaction.editReply({
       content: `Şu sorunun yanıtını aşağıdan izleyebilirsiniz: **${selectedQuestion.title}** \n\n${videoLink}`,
@@ -111,13 +113,13 @@ export class QuestionsInteractionCollector {
       return
     }
 
-    const selectedQuestion = this.questionService.getQuestionById(this.selectedQuestionId)
+    const selectedQuestion = await this.questionModel.findById(this.selectedQuestionId)
 
     const startTimeInSeconds =
-      Number(selectedQuestion.time.start.minute) * 60 + Number(selectedQuestion.time.start.second)
+      Number(selectedQuestion.startTime.minute) * 60 + Number(selectedQuestion.startTime.second)
     const endTimeInMiliseconds =
-      Number(selectedQuestion.time.end?.minute) * 60000 +
-      Number(selectedQuestion.time.end?.second) * 1000
+      Number(selectedQuestion.endTime.minute) * 60000 +
+      Number(selectedQuestion.endTime.second) * 1000
     const answerTimeInMiliseconds = endTimeInMiliseconds - startTimeInSeconds * 1000
 
     const voiceConnection = joinVoiceChannel({
@@ -151,7 +153,7 @@ export class QuestionsInteractionCollector {
 
     await interaction.editReply({
       content: `Şu sorunun yanıtı oynatılıyor: **${selectedQuestion.title}** \n\n${
-        !selectedQuestion.time.end
+        !selectedQuestion.endTime
           ? '🚨 Uyarı: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
           : ''
       }`,

@@ -3,7 +3,8 @@ import { EnvalidModule } from 'nestjs-envalid'
 import { validators } from '../config'
 import { DiscordModule } from './discord/discord.module'
 import { BotModule } from './bot/bot.module'
-import { QuestionModule } from './question/question.module'
+import { DatabaseModule } from './database/database.module'
+import { YouTubeModule } from './youtube/youtube.module'
 
 @Module({
   imports: [
@@ -12,9 +13,10 @@ import { QuestionModule } from './question/question.module'
       useDotenv: true,
       isGlobal: true
     }),
+    DatabaseModule,
+    YouTubeModule,
     DiscordModule,
-    BotModule,
-    QuestionModule
+    BotModule
   ]
 })
 export class AppModule {}

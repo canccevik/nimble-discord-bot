@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { Param, ParamType } from '@discord-nestjs/core'
-import { Question } from '../../../question/interfaces'
-import { QuestionService } from '../../../question/question.service'
 import {
   NEXT_PAGE_BUTTON,
   PREVIOUS_PAGE_BUTTON,
@@ -20,6 +18,9 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js'
+import { InjectModel } from '@nestjs/mongoose'
+import { Question, QuestionDocument } from 'src/modules/database/schemas'
+import { Model } from 'mongoose'
 
 export class QuestionsDto {
   @Param({
@@ -35,7 +36,7 @@ export class BaseQuestionsCommand {
   private currentPage = 0
   private searchKeyword = ''
 
-  constructor(private readonly questionService: QuestionService) {}
+  constructor(@InjectModel(Question.name) private readonly questionModel: Model<Question>) {}
 
   public async run(
     interaction: MessageComponentInteraction | CommandInteraction,
@@ -48,18 +49,30 @@ export class BaseQuestionsCommand {
       await interaction.deferReply()
     }
 
-    const { questions, totalResultCount } = this.questionService.getQuestionsByPage({
-      count: QUESTION_COUNT_PER_PAGE,
-      page: this.currentPage,
-      searchKeyword: this.searchKeyword
-    })
+    const findQuery =
+      this.searchKeyword === ''
+        ? {}
+        : {
+            title: { $regex: this.searchKeyword, $options: 'i' }
+          }
 
-    if (this.searchKeyword && totalResultCount === 0) {
-      await interaction.editReply(`**${this.searchKeyword}** için bir sonuç bulunamadı!`)
+    const totalQuestionCount = await this.questionModel.find(findQuery).count().exec()
+    const questions = await this.questionModel
+      .find(findQuery)
+      .skip(this.currentPage * QUESTION_COUNT_PER_PAGE)
+      .limit(QUESTION_COUNT_PER_PAGE)
+
+    if (!questions.length) {
+      if (this.searchKeyword) {
+        await interaction.editReply(`**${this.searchKeyword}** için bir sonuç bulunamadı!`)
+        return
+      }
+      await interaction.editReply(`Bir sonuç bulunamadı!`)
+      return
     }
 
-    const embed = this.buildEmbed(questions, this.currentPage, totalResultCount)
-    const buttonRow = this.buildButtonRow(this.currentPage, questions.length, totalResultCount)
+    const embed = this.buildEmbed(questions, this.currentPage, totalQuestionCount)
+    const buttonRow = this.buildButtonRow(this.currentPage, questions.length, totalQuestionCount)
     const selectionRow = this.buildSelectionRow(questions)
 
     await interaction.editReply({
@@ -72,12 +85,20 @@ export class BaseQuestionsCommand {
     this.currentPage = 0
   }
 
-  private buildEmbed(questions: Question[], page: number, totalResultCount: number): EmbedBuilder {
+  private buildEmbed(
+    questions: QuestionDocument[],
+    page: number,
+    totalQuestionCount: number
+  ): EmbedBuilder {
     const embedContent: APIEmbedField[] = questions.map((question, i) => {
-      const { start, end } = question.time
+      const { startTime, endTime } = question
       return {
         name: `**${page * QUESTION_COUNT_PER_PAGE + i + 1}.** ${question.title}`,
-        value: `> ${start.minute}:${start.second}-${end ? `${end?.minute}:${end?.second}` : '???'}`
+        value: `> ${startTime.minute}:${startTime.second}-${
+          endTime.minute !== undefined && endTime.second !== undefined
+            ? `${endTime.minute}:${endTime.second}`
+            : '???'
+        }`
       }
     })
 
@@ -85,7 +106,7 @@ export class BaseQuestionsCommand {
       .addFields(...embedContent)
       .setTitle(`Bir soru seçin`)
       .setFooter({
-        text: `${totalResultCount} soru içerisinden ${page * QUESTION_COUNT_PER_PAGE + 1}-${
+        text: `${totalQuestionCount} soru içerisinden ${page * QUESTION_COUNT_PER_PAGE + 1}-${
           page * QUESTION_COUNT_PER_PAGE + questions.length
         } aralığı gösteriliyor.`
       })
@@ -94,7 +115,7 @@ export class BaseQuestionsCommand {
   private buildButtonRow(
     page: number,
     questionCount: number,
-    totalResultCount: number
+    totalQuestionCount: number
   ): ActionRowBuilder<MessageActionRowComponentBuilder> {
     const previousPageButton = new ButtonBuilder()
       .setCustomId(PREVIOUS_PAGE_BUTTON)
@@ -106,7 +127,7 @@ export class BaseQuestionsCommand {
       .setCustomId(NEXT_PAGE_BUTTON)
       .setLabel('İleri')
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(totalResultCount === page * QUESTION_COUNT_PER_PAGE + questionCount)
+      .setDisabled(totalQuestionCount === page * QUESTION_COUNT_PER_PAGE + questionCount)
 
     return new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
       previousPageButton,
@@ -115,7 +136,7 @@ export class BaseQuestionsCommand {
   }
 
   private buildSelectionRow(
-    questions: Question[]
+    questions: QuestionDocument[]
   ): ActionRowBuilder<MessageActionRowComponentBuilder> {
     const select = new StringSelectMenuBuilder()
       .setCustomId(SELECTION_MENU)

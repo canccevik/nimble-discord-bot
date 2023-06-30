@@ -1,16 +1,24 @@
 import { Config, ENV } from '../../config'
 import { Inject, Injectable } from '@nestjs/common'
-import { Question, VideoIdListResponse, VideoListResponse } from './interfaces'
+import { VideoIdListResponse, VideoListResponse } from './interfaces'
 import axios from 'axios'
-import * as uniqid from 'uniqid'
+import { InjectModel } from '@nestjs/mongoose'
+import { Question } from '../database/schemas'
+import { Model } from 'mongoose'
 
 @Injectable()
 export class YouTubeService {
-  constructor(@Inject(ENV) private readonly config: Config) {}
+  constructor(
+    @Inject(ENV) private readonly config: Config,
+    @InjectModel(Question.name) private readonly questionModel: Model<Question>
+  ) {}
 
-  public async qetQuestions(): Promise<Question[]> {
+  public async fetchAndCreateQuestions(): Promise<void> {
+    const questionCount = await this.questionModel.find().count()
+
+    if (questionCount > 0) return
+
     const videoIdList = await this.getVideoIdList()
-
     const questions: Question[] = []
 
     for (let i = 0; i < videoIdList.length; i += 49) {
@@ -31,26 +39,21 @@ export class YouTubeService {
         const { description } = item.snippet
         const lines = [...description.matchAll(pattern)]
 
-        lines.forEach((line, i) => {
+        lines.forEach(async (line, i) => {
           let title = line[1].trim()
 
           if (title.startsWith('-')) {
             title = title.slice(1).trim()
           }
 
-          const start = { minute: line[2], second: line[3] }
-          const end = lines[i + 1] ? { minute: lines[i + 1][2], second: lines[i + 1][3] } : null
+          const startTime = { minute: line[2], second: line[3] }
+          const endTime = lines[i + 1] ? { minute: lines[i + 1][2], second: lines[i + 1][3] } : null
 
-          questions.push({
-            id: uniqid(),
-            videoId: item.id,
-            time: { start, end },
-            title
-          })
+          questions.push({ title, endTime, startTime, videoId: item.id })
         })
       })
     }
-    return questions
+    await this.questionModel.insertMany(questions)
   }
 
   private async getVideoIdList(): Promise<string[]> {

@@ -1,12 +1,12 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './modules/app.module'
-import { QuestionService } from './modules/question/question.service'
+import { YouTubeService } from './modules/youtube/youtube.service'
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createApplicationContext(AppModule)
 
-  const questionService = app.get<QuestionService>(QuestionService)
+  const youtubeService = app.get<YouTubeService>(YouTubeService)
 
-  await questionService.createQuestionsFile()
+  await youtubeService.fetchAndCreateQuestions()
 }
 bootstrap()
