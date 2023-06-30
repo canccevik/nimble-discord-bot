@@ -94,7 +94,7 @@ export class QuestionsInteractionCollector {
 
   private async handleWatchButtonInteraction(interaction: ButtonInteraction): Promise<void> {
     const selectedQuestion = await this.questionModel.findById(this.selectedQuestionId)
-    const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.endTime.second}s`
+    const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.startTime.second}s`
 
     await interaction.editReply({
       content: `Şu sorunun yanıtını aşağıdan izleyebilirsiniz: **${selectedQuestion.title}** \n\n${videoLink}`,
