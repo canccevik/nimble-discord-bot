@@ -1,14 +1,22 @@
+import * as play from 'play-dl'
 import { Injectable, Scope } from '@nestjs/common'
+import { joinVoiceChannel } from '@discordjs/voice'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
 import { QuestionService } from '../../../question/question.service'
+import { BaseQuestionsCommand } from './base-questions.command'
+import {
+  LISTEN_BUTTON,
+  NEXT_PAGE_BUTTON,
+  PREVIOUS_PAGE_BUTTON,
+  SELECTION_MENU,
+  WATCH_BUTTON
+} from './constants'
 import {
   createAudioResource,
   createAudioPlayer,
   NoSubscriberBehavior,
   VoiceConnectionStatus
 } from '@discordjs/voice'
-import { joinVoiceChannel } from '@discordjs/voice'
-import * as play from 'play-dl'
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -21,43 +29,38 @@ import {
 } from 'discord.js'
 
 @Injectable({ scope: Scope.REQUEST })
-@InteractionEventCollector({ time: 15000 })
+@InteractionEventCollector({})
 export class QuestionsInteractionCollector {
   private selectedQuestionId: string
+
+  private interactionHandlers = {
+    [SELECTION_MENU]: this.handleSelectMenuInteraction.bind(this),
+    [WATCH_BUTTON]: this.handleWatchButtonInteraction.bind(this),
+    [LISTEN_BUTTON]: this.handleListenButtonInteraction.bind(this),
+    [NEXT_PAGE_BUTTON]: this.handleNextPageButtonInteraction.bind(this),
+    [PREVIOUS_PAGE_BUTTON]: this.handlePreviousPageButtonInteraction.bind(this)
+  }
 
   constructor(
     @InjectCauseEvent()
     private readonly causeInteraction: ChatInputCommandInteraction,
+    private readonly baseQuestionsCommand: BaseQuestionsCommand,
     private readonly questionService: QuestionService
   ) {}
 
   @Filter()
-  public filter(interaction: StringSelectMenuInteraction): boolean {
-    return this.causeInteraction.id === interaction.message.interaction.id
+  public filter(interaction: StringSelectMenuInteraction | ButtonInteraction): boolean {
+    return this.causeInteraction.channelId === interaction.message.channelId
   }
 
   @On('collect')
   public async onCollect(
     interaction: StringSelectMenuInteraction | ButtonInteraction
   ): Promise<void> {
-    if (interaction.isStringSelectMenu()) {
-      return this.handleSelectMenuInteraction(interaction)
+    if (!interaction.deferred) {
+      await interaction.deferUpdate()
     }
-
-    if (interaction.customId === 'watch-button') {
-      return this.handleWatchButtonInteraction(interaction)
-    }
-
-    if (
-      interaction.customId === 'listen-button' &&
-      (interaction.member as GuildMember).voice.channelId
-    ) {
-      return this.handleListenButtonInteraction(interaction)
-    } else {
-      await interaction.reply({
-        content: `Sorunun yanıtını dinleyebilmek için bir ses kanalına katılmalısın! <@${interaction.user.id}>`
-      })
-    }
+    await this.interactionHandlers[interaction.customId](interaction)
   }
 
   private async handleSelectMenuInteraction(
@@ -66,13 +69,12 @@ export class QuestionsInteractionCollector {
     this.selectedQuestionId = interaction.values[0]
 
     const watchButton = new ButtonBuilder()
-      .setCustomId('watch-button')
+      .setCustomId(WATCH_BUTTON)
       .setLabel('İzle')
-
       .setStyle(ButtonStyle.Primary)
 
     const listenButton = new ButtonBuilder()
-      .setCustomId('listen-button')
+      .setCustomId(LISTEN_BUTTON)
       .setLabel('Dinle')
       .setStyle(ButtonStyle.Success)
 
@@ -81,7 +83,7 @@ export class QuestionsInteractionCollector {
       listenButton
     )
 
-    await interaction.update({
+    await interaction.editReply({
       content: 'Bir aksiyon seçin:',
       components: [buttonRow],
       embeds: []
@@ -92,20 +94,30 @@ export class QuestionsInteractionCollector {
     const selectedQuestion = this.questionService.getQuestionById(this.selectedQuestionId)
     const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.time.start.minute}m${selectedQuestion.time.start.second}s`
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `Şu sorunun yanıtını aşağıdan izleyebilirsiniz: **${selectedQuestion.title}** \n\n${videoLink}`,
-      components: []
+      components: [],
+      embeds: []
     })
   }
 
   private async handleListenButtonInteraction(interaction: ButtonInteraction): Promise<void> {
+    if (!(interaction.member as GuildMember).voice.channelId) {
+      await interaction.editReply({
+        content: `Sorunun yanıtını dinleyebilmek için bir ses kanalına katılmalısın! <@${interaction.user.id}>`,
+        components: [],
+        embeds: []
+      })
+      return
+    }
+
     const selectedQuestion = this.questionService.getQuestionById(this.selectedQuestionId)
 
     const startTimeInSeconds =
       Number(selectedQuestion.time.start.minute) * 60 + Number(selectedQuestion.time.start.second)
     const endTimeInMiliseconds =
-      Number(selectedQuestion.time.end.minute) * 60000 +
-      Number(selectedQuestion.time.end.second) * 1000
+      Number(selectedQuestion.time.end?.minute) * 60000 +
+      Number(selectedQuestion.time.end?.second) * 1000
     const answerTimeInMiliseconds = endTimeInMiliseconds - startTimeInSeconds * 1000
 
     const voiceConnection = joinVoiceChannel({
@@ -128,19 +140,31 @@ export class QuestionsInteractionCollector {
     player.play(resource)
     voiceConnection.subscribe(player)
 
-    setTimeout(() => {
-      if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
+    if (answerTimeInMiliseconds) {
+      setTimeout(() => {
+        if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
 
-      player.stop(true)
-      voiceConnection.destroy()
-    }, answerTimeInMiliseconds)
+        player.stop(true)
+        voiceConnection.destroy()
+      }, answerTimeInMiliseconds)
+    }
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `Şu sorunun yanıtı oynatılıyor: **${selectedQuestion.title}** \n\n${
         !selectedQuestion.time.end
           ? '🚨 Uyarı: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
           : ''
-      }`
+      }`,
+      components: [],
+      embeds: []
     })
+  }
+
+  public async handleNextPageButtonInteraction(interaction: ButtonInteraction): Promise<void> {
+    await this.baseQuestionsCommand.run(interaction, { addToCurrentPage: 1 })
+  }
+
+  public async handlePreviousPageButtonInteraction(interaction: ButtonInteraction): Promise<void> {
+    await this.baseQuestionsCommand.run(interaction, { addToCurrentPage: -1 })
   }
 }
