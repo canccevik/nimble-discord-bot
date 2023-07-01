@@ -117,10 +117,10 @@ export class QuestionsInteractionCollector {
 
     const startTimeInSeconds =
       Number(selectedQuestion.startTime.minute) * 60 + Number(selectedQuestion.startTime.second)
-    const endTimeInMiliseconds =
+    const endTimeInMilliseconds =
       Number(selectedQuestion.endTime.minute) * 60000 +
       Number(selectedQuestion.endTime.second) * 1000
-    const answerTimeInMiliseconds = endTimeInMiliseconds - startTimeInSeconds * 1000
+    const answerTimeInMilliseconds = endTimeInMilliseconds - startTimeInSeconds * 1000
 
     const voiceConnection = joinVoiceChannel({
       channelId: (interaction.member as GuildMember).voice.channelId,
@@ -142,13 +142,13 @@ export class QuestionsInteractionCollector {
     player.play(resource)
     voiceConnection.subscribe(player)
 
-    if (answerTimeInMiliseconds) {
+    if (answerTimeInMilliseconds) {
       setTimeout(() => {
         if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
 
         player.stop(true)
         voiceConnection.destroy()
-      }, answerTimeInMiliseconds)
+      }, answerTimeInMilliseconds)
     }
 
     await interaction.editReply({
