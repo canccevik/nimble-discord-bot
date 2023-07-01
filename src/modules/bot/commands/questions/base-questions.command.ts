@@ -49,18 +49,7 @@ export class BaseQuestionsCommand {
       await interaction.deferReply()
     }
 
-    const findQuery =
-      this.searchKeyword === ''
-        ? {}
-        : {
-            title: { $regex: this.searchKeyword, $options: 'i' }
-          }
-
-    const totalQuestionCount = await this.questionModel.find(findQuery).count().exec()
-    const questions = await this.questionModel
-      .find(findQuery)
-      .skip(this.currentPage * QUESTION_COUNT_PER_PAGE)
-      .limit(QUESTION_COUNT_PER_PAGE)
+    const { questions, totalQuestionCount } = await this.getQuestions()
 
     if (!questions.length) {
       if (this.searchKeyword) {
@@ -83,6 +72,26 @@ export class BaseQuestionsCommand {
 
   public resetCurrentPage(): void {
     this.currentPage = 0
+  }
+
+  private async getQuestions(): Promise<{
+    questions: QuestionDocument[]
+    totalQuestionCount: number
+  }> {
+    const findQuery =
+      this.searchKeyword === ''
+        ? {}
+        : {
+            title: { $regex: this.searchKeyword, $options: 'i' }
+          }
+
+    const totalQuestionCount = await this.questionModel.find(findQuery).count().exec()
+    const questions = await this.questionModel
+      .find(findQuery)
+      .skip(this.currentPage * QUESTION_COUNT_PER_PAGE)
+      .limit(QUESTION_COUNT_PER_PAGE)
+
+    return { questions, totalQuestionCount }
   }
 
   private buildEmbed(
