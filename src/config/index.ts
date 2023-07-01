@@ -1,10 +1,11 @@
-import { makeValidators, Static, str } from 'nestjs-envalid'
+import { makeValidators, port, Static, str } from 'nestjs-envalid'
 
 const config = {
   BOT_TOKEN: str(),
   YOUTUBE_API_KEY: str(),
   YOUTUBE_CHANNEL_ID: str(),
-  DATABASE_URI: str()
+  DATABASE_URI: str(),
+  PORT: port({ default: 3000 })
 }
 
 export const validators = makeValidators(config)
