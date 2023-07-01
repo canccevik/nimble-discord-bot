@@ -30,11 +30,11 @@ import {
   StringSelectMenuInteraction
 } from 'discord.js'
 
+let selectedQuestionId = ''
+
 @Injectable({ scope: Scope.REQUEST })
 @InteractionEventCollector({})
 export class QuestionsInteractionCollector {
-  private selectedQuestionId: string
-
   private interactionHandlers = {
     [SELECTION_MENU]: this.handleSelectMenuInteraction.bind(this),
     [WATCH_BUTTON]: this.handleWatchButtonInteraction.bind(this),
@@ -68,7 +68,7 @@ export class QuestionsInteractionCollector {
   private async handleSelectMenuInteraction(
     interaction: StringSelectMenuInteraction
   ): Promise<void> {
-    this.selectedQuestionId = interaction.values[0]
+    selectedQuestionId = interaction.values[0]
 
     const watchButton = new ButtonBuilder()
       .setCustomId(WATCH_BUTTON)
@@ -93,7 +93,7 @@ export class QuestionsInteractionCollector {
   }
 
   private async handleWatchButtonInteraction(interaction: ButtonInteraction): Promise<void> {
-    const selectedQuestion = await this.questionModel.findById(this.selectedQuestionId)
+    const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
     const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.startTime.second}s`
 
     await interaction.editReply({
@@ -113,7 +113,7 @@ export class QuestionsInteractionCollector {
       return
     }
 
-    const selectedQuestion = await this.questionModel.findById(this.selectedQuestionId)
+    const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
 
     const startTimeInSeconds =
       Number(selectedQuestion.startTime.minute) * 60 + Number(selectedQuestion.startTime.second)
