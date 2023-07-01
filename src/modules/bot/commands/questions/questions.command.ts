@@ -20,7 +20,7 @@ export class QuestionsCommand {
     @InteractionEvent(SlashCommandPipe) dto: QuestionsDto,
     @InteractionEvent() interaction: CommandInteraction
   ): Promise<void> {
-    this.baseQuestionsCommand.resetCurrentPage()
+    this.baseQuestionsCommand.resetState()
     return this.baseQuestionsCommand.run(interaction, {
       searchKeyword: dto.searchKeyword
     })

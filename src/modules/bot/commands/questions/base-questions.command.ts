@@ -19,7 +19,7 @@ import {
   StringSelectMenuOptionBuilder
 } from 'discord.js'
 import { InjectModel } from '@nestjs/mongoose'
-import { Question, QuestionDocument } from 'src/modules/database/schemas'
+import { Question, QuestionDocument } from '../../../database/schemas'
 import { Model } from 'mongoose'
 
 export class QuestionsDto {
@@ -70,8 +70,9 @@ export class BaseQuestionsCommand {
     })
   }
 
-  public resetCurrentPage(): void {
+  public resetState(): void {
     this.currentPage = 0
+    this.searchKeyword = ''
   }
 
   private async getQuestions(): Promise<{
