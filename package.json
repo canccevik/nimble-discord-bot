@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "author": "Can Çevik <mazlumcancevik@gmail.com>",
   "license": "MIT",
+  "engines": { "node": "16.x" },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
