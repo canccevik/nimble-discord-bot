@@ -59,9 +59,6 @@ export class QuestionsInteractionCollector {
   public async onCollect(
     interaction: StringSelectMenuInteraction | ButtonInteraction
   ): Promise<void> {
-    if (!interaction.deferred) {
-      await interaction.deferUpdate()
-    }
     await this.interactionHandlers[interaction.customId](interaction)
   }
 
@@ -85,7 +82,7 @@ export class QuestionsInteractionCollector {
       listenButton
     )
 
-    await interaction.editReply({
+    await interaction.reply({
       content: 'Bir aksiyon seçin:',
       components: [buttonRow],
       embeds: []
@@ -96,7 +93,7 @@ export class QuestionsInteractionCollector {
     const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
     const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.startTime.second}s`
 
-    await interaction.editReply({
+    await interaction.reply({
       content: `Şu sorunun yanıtını aşağıdan izleyebilirsiniz: **${selectedQuestion.title}** \n\n${videoLink}`,
       components: [],
       embeds: []
@@ -105,7 +102,7 @@ export class QuestionsInteractionCollector {
 
   private async handleListenButtonInteraction(interaction: ButtonInteraction): Promise<void> {
     if (!(interaction.member as GuildMember).voice.channelId) {
-      await interaction.editReply({
+      await interaction.reply({
         content: `Sorunun yanıtını dinleyebilmek için bir ses kanalına katılmalısın! <@${interaction.user.id}>`,
         components: [],
         embeds: []
@@ -151,7 +148,7 @@ export class QuestionsInteractionCollector {
       }, answerTimeInMilliseconds)
     }
 
-    await interaction.editReply({
+    await interaction.reply({
       content: `Şu sorunun yanıtı oynatılıyor: **${selectedQuestion.title}** \n\n${
         !selectedQuestion.endTime
           ? '🚨 Uyarı: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
