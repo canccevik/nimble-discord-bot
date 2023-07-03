@@ -68,6 +68,7 @@ export class QuestionsInteractionCollector {
     if (!interaction.isStringSelectMenu()) return
 
     selectedQuestionId = interaction.values[0]
+    const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
 
     const watchButton = new ButtonBuilder()
       .setCustomId(WATCH_BUTTON)
@@ -85,7 +86,7 @@ export class QuestionsInteractionCollector {
     )
 
     await interaction.reply({
-      content: 'Bir aksiyon seçin:',
+      content: `Seçilen soru: ${selectedQuestion.title} \n\nBir aksiyon seçin <@${interaction.user.id}>:`,
       components: [buttonRow],
       embeds: []
     })
@@ -98,7 +99,7 @@ export class QuestionsInteractionCollector {
     const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.startTime.second}s`
 
     await interaction.reply({
-      content: `Şu sorunun yanıtını aşağıdan izleyebilirsiniz: **${selectedQuestion.title}** \n\n${videoLink}`,
+      content: `Şu sorunun yanıtını aşağıdan izleyebilirsin <@${interaction.user.id}>: **${selectedQuestion.title}** \n\n${videoLink}`,
       components: [],
       embeds: []
     })
@@ -155,7 +156,9 @@ export class QuestionsInteractionCollector {
     }
 
     await interaction.reply({
-      content: `Şu sorunun yanıtı oynatılıyor: **${selectedQuestion.title}** \n\n${
+      content: `<@${interaction.user.id}> için şu sorunun yanıtı oynatılıyor: **${
+        selectedQuestion.title
+      }** \n\n${
         !selectedQuestion.endTime
           ? '🚨 Uyarı: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
           : ''

@@ -60,7 +60,7 @@ export class BaseQuestionsCommand {
       return
     }
 
-    const embed = this.buildEmbed(questions, this.currentPage, totalQuestionCount)
+    const embed = this.buildEmbed(interaction, questions, this.currentPage, totalQuestionCount)
     const buttonRow = this.buildButtonRow(this.currentPage, questions.length, totalQuestionCount)
     const selectionRow = this.buildSelectionRow(questions)
 
@@ -96,6 +96,7 @@ export class BaseQuestionsCommand {
   }
 
   private buildEmbed(
+    interaction: MessageComponentInteraction | CommandInteraction,
     questions: QuestionDocument[],
     page: number,
     totalQuestionCount: number
@@ -114,7 +115,7 @@ export class BaseQuestionsCommand {
 
     return new EmbedBuilder()
       .addFields(...embedContent)
-      .setTitle(`Bir soru seçin`)
+      .setTitle(`Bir soru seçin <@${interaction.user.id}>:`)
       .setFooter({
         text: `${totalQuestionCount} soru içerisinden ${page * QUESTION_COUNT_PER_PAGE + 1}-${
           page * QUESTION_COUNT_PER_PAGE + questions.length
