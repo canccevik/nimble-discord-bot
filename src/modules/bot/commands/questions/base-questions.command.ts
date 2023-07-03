@@ -115,7 +115,7 @@ export class BaseQuestionsCommand {
 
     return new EmbedBuilder()
       .addFields(...embedContent)
-      .setTitle(`Bir soru seçin <@${interaction.user.id}>:`)
+      .setTitle(`Bir soru seçin:`)
       .setFooter({
         text: `${totalQuestionCount} soru içerisinden ${page * QUESTION_COUNT_PER_PAGE + 1}-${
           page * QUESTION_COUNT_PER_PAGE + questions.length
