@@ -45,7 +45,9 @@ export class BaseQuestionsCommand {
     if (options.searchKeyword) this.searchKeyword = options.searchKeyword
     if (options.addToCurrentPage) this.currentPage += options.addToCurrentPage
 
-    await interaction.deferReply()
+    if (interaction.isChatInputCommand() || interaction.isMessageComponent()) {
+      await interaction.deferReply()
+    }
 
     const { questions, totalQuestionCount } = await this.getQuestions()
 
