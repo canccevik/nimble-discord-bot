@@ -86,7 +86,7 @@ export class QuestionsInteractionCollector {
     )
 
     await interaction.reply({
-      content: `Seçilen soru: ${selectedQuestion.title} \n\nBir aksiyon seçin <@${interaction.user.id}>:`,
+      content: `Seçilen soru: **${selectedQuestion.title}** \n\nBir aksiyon seçin <@${interaction.user.id}>:`,
       components: [buttonRow],
       embeds: []
     })
