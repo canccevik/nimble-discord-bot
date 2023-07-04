@@ -1,4 +1,4 @@
-export const QUESTION_COUNT_PER_PAGE = 10
+export const QUESTION_COUNT_PER_PAGE = 5
 export const SELECTION_MENU = 'selection-menu'
 export const WATCH_BUTTON = 'watch-button'
 export const LISTEN_BUTTON = 'listen-button'
