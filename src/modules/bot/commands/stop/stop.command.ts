@@ -1,5 +1,5 @@
 import { Command, Handler, InteractionEvent } from '@discord-nestjs/core'
-import { Interaction } from 'discord.js'
+import { Interaction, InteractionReplyOptions } from 'discord.js'
 import { VoiceConnectionStatus, getVoiceConnection } from '@discordjs/voice'
 
 @Command({
@@ -8,17 +8,23 @@ import { VoiceConnectionStatus, getVoiceConnection } from '@discordjs/voice'
 })
 export class StopCommand {
   @Handler()
-  public run(@InteractionEvent() interaction: Interaction): string {
+  public run(@InteractionEvent() interaction: Interaction): InteractionReplyOptions {
     const voiceConnection = getVoiceConnection(interaction.guildId)
 
     if (!voiceConnection) {
-      return `Zaten bir ses kanalında değilim! <@${interaction.user.id}>`
+      return {
+        content: `Zaten bir ses kanalında değilim!`,
+        ephemeral: true
+      }
     }
 
     if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
 
     voiceConnection.destroy()
 
-    return 'Ses kanalından ayrıldım!'
+    return {
+      content: 'Ses kanalından ayrıldım!',
+      ephemeral: true
+    }
   }
 }

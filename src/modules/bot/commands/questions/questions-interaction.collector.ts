@@ -4,7 +4,7 @@ import { joinVoiceChannel } from '@discordjs/voice'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
 import { BaseQuestionsCommand } from './base-questions.command'
 import { InjectModel } from '@nestjs/mongoose'
-import { Question } from 'src/modules/database/schemas'
+import { Question } from '../../../database/schemas'
 import { Model } from 'mongoose'
 import {
   LISTEN_BUTTON,
@@ -84,9 +84,9 @@ export class QuestionsInteractionCollector {
     )
 
     await interaction.reply({
-      content: `Seçilen soru: **${selectedQuestion.title}** \n\nBir aksiyon seçin <@${interaction.user.id}>:`,
+      content: `Seçilen soru: **${selectedQuestion.title}** \n\nBir aksiyon seçin:`,
       components: [buttonRow],
-      embeds: []
+      ephemeral: true
     })
   }
 
@@ -95,18 +95,15 @@ export class QuestionsInteractionCollector {
     const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.startTime.second}s`
 
     await interaction.reply({
-      content: `Şu sorunun yanıtını aşağıdan izleyebilirsin <@${interaction.user.id}>: **${selectedQuestion.title}** \n\n${videoLink}`,
-      components: [],
-      embeds: []
+      content: `Şu sorunun yanıtını aşağıdan izleyebilirsin: **${selectedQuestion.title}** \n\n${videoLink}`,
+      ephemeral: true
     })
   }
 
   private async handleListenButtonInteraction(interaction: ButtonInteraction): Promise<void> {
     if (!(interaction.member as GuildMember).voice.channelId) {
       await interaction.reply({
-        content: `Sorunun yanıtını dinleyebilmek için bir ses kanalına katılmalısın! <@${interaction.user.id}>`,
-        components: [],
-        embeds: [],
+        content: `Sorunun yanıtını dinleyebilmek için bir ses kanalına katılmalısın!`,
         ephemeral: true
       })
       return
@@ -151,15 +148,12 @@ export class QuestionsInteractionCollector {
     }
 
     await interaction.reply({
-      content: `<@${interaction.user.id}> için şu sorunun yanıtı oynatılıyor: **${
-        selectedQuestion.title
-      }** \n\n${
-        !selectedQuestion.endTime
+      content: `Şu sorunun yanıtı ses kanalında oynatılıyor: **${selectedQuestion.title}** \n\n${
+        !selectedQuestion.endTime.minute || !selectedQuestion.endTime.second
           ? '🚨 Uyarı: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
           : ''
       }`,
-      components: [],
-      embeds: []
+      ephemeral: true
     })
   }
 

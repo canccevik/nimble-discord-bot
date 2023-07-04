@@ -45,18 +45,20 @@ export class BaseQuestionsCommand {
     if (options.searchKeyword) this.searchKeyword = options.searchKeyword
     if (options.addToCurrentPage) this.currentPage += options.addToCurrentPage
 
-    if (interaction.isChatInputCommand() || interaction.isMessageComponent()) {
-      await interaction.deferReply()
-    }
-
     const { questions, totalQuestionCount } = await this.getQuestions()
 
     if (!questions.length) {
       if (this.searchKeyword) {
-        await interaction.editReply(`**${this.searchKeyword}** için bir sonuç bulunamadı!`)
+        await interaction.reply({
+          content: `**${this.searchKeyword}** için bir sonuç bulunamadı!`,
+          ephemeral: true
+        })
         return
       }
-      await interaction.editReply(`Bir sonuç bulunamadı!`)
+      await interaction.reply({
+        content: `Bir sonuç bulunamadı!`,
+        ephemeral: true
+      })
       return
     }
 
@@ -64,9 +66,10 @@ export class BaseQuestionsCommand {
     const buttonRow = this.buildButtonRow(this.currentPage, questions.length, totalQuestionCount)
     const selectionRow = this.buildSelectionRow(questions)
 
-    await interaction.editReply({
+    await interaction.reply({
       embeds: [embed],
-      components: [buttonRow, selectionRow]
+      components: [buttonRow, selectionRow],
+      ephemeral: true
     })
   }
 
