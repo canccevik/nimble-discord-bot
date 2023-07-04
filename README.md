@@ -17,22 +17,25 @@
 
 2. Get the bot's token at https://discord.com/developers/applications by creating a new application.
 
-3. Install NPM packages
+3. Get the Logtail source token at https://betterstack.com/ by connecting a new Node.js source.
+
+4. Install NPM packages
 
    ```sh
    npm install
    ```
 
-4. Prepare the `.env` file
+5. Prepare the `.env` file
 
    ```JS
     BOT_TOKEN = YOUR-DISCORD-BOT-TOKEN
     YOUTUBE_API_KEY = YOUR-DISCORD-API-KEY
     YOUTUBE_CHANNEL_ID = YOUTUBE-CHANNEL-ID
     DATABASE_URI = MONGODB-URI
+    LOGTAIL_SOURCE_TOKEN = YOUR-LOGTAIL-SOURCE-TOKEN
    ```
 
-5. Start the project
+6. Start the project
    ```sh
    npm run start
    ```

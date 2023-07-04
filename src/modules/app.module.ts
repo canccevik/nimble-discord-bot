@@ -5,6 +5,7 @@ import { DiscordModule } from './discord/discord.module'
 import { BotModule } from './bot/bot.module'
 import { DatabaseModule } from './database/database.module'
 import { YouTubeModule } from './youtube/youtube.module'
+import { LoggerModule } from './logger/logger.module'
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { YouTubeModule } from './youtube/youtube.module'
       useDotenv: true,
       isGlobal: true
     }),
+    LoggerModule,
     DatabaseModule,
     YouTubeModule,
     DiscordModule,

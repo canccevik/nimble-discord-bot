@@ -5,7 +5,8 @@ const config = {
   YOUTUBE_API_KEY: str(),
   YOUTUBE_CHANNEL_ID: str(),
   DATABASE_URI: str(),
-  PORT: port({ default: 3000 })
+  PORT: port({ default: 3000 }),
+  LOGTAIL_SOURCE_TOKEN: str()
 }
 
 export const validators = makeValidators(config)
