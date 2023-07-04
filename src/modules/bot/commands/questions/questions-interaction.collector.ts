@@ -112,7 +112,8 @@ export class QuestionsInteractionCollector {
       await interaction.reply({
         content: `Sorunun yanıtını dinleyebilmek için bir ses kanalına katılmalısın! <@${interaction.user.id}>`,
         components: [],
-        embeds: []
+        embeds: [],
+        ephemeral: true
       })
       return
     }
