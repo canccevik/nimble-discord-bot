@@ -65,8 +65,6 @@ export class QuestionsInteractionCollector {
   private async handleSelectMenuInteraction(
     interaction: StringSelectMenuInteraction
   ): Promise<void> {
-    if (!interaction.isStringSelectMenu()) return
-
     selectedQuestionId = interaction.values[0]
     const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
 
@@ -93,8 +91,6 @@ export class QuestionsInteractionCollector {
   }
 
   private async handleWatchButtonInteraction(interaction: ButtonInteraction): Promise<void> {
-    if (!interaction.isButton()) return
-
     const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
     const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.startTime.second}s`
 
@@ -106,8 +102,6 @@ export class QuestionsInteractionCollector {
   }
 
   private async handleListenButtonInteraction(interaction: ButtonInteraction): Promise<void> {
-    if (!interaction.isButton()) return
-
     if (!(interaction.member as GuildMember).voice.channelId) {
       await interaction.reply({
         content: `Sorunun yanıtını dinleyebilmek için bir ses kanalına katılmalısın! <@${interaction.user.id}>`,
@@ -170,12 +164,10 @@ export class QuestionsInteractionCollector {
   }
 
   public async handleNextPageButtonInteraction(interaction: ButtonInteraction): Promise<void> {
-    if (!interaction.isButton()) return
     await this.baseQuestionsCommand.run(interaction, { addToCurrentPage: 1 })
   }
 
   public async handlePreviousPageButtonInteraction(interaction: ButtonInteraction): Promise<void> {
-    if (!interaction.isButton()) return
     await this.baseQuestionsCommand.run(interaction, { addToCurrentPage: -1 })
   }
 }
