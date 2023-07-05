@@ -14,7 +14,11 @@ export class LoggerConfigService implements WinstonModuleOptionsFactory {
   }
 
   public createWinstonModuleOptions(): WinstonModuleOptions {
-    const transports = [new winston.transports.Console(), new LogtailTransport(this.logtail)]
+    const transports: winston.transport[] = [new LogtailTransport(this.logtail)]
+
+    if (this.config.isDevelopment) {
+      transports.push(new winston.transports.Console())
+    }
 
     return {
       transports,

@@ -1,11 +1,12 @@
 import * as play from 'play-dl'
-import { Injectable, Scope } from '@nestjs/common'
+import { Inject, Injectable, Scope } from '@nestjs/common'
 import { joinVoiceChannel } from '@discordjs/voice'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
 import { BaseQuestionsCommand } from './base-questions.command'
 import { InjectModel } from '@nestjs/mongoose'
 import { Question } from '../../../database/schemas'
 import { Model } from 'mongoose'
+import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
 import {
   LISTEN_BUTTON,
   NEXT_PAGE_BUTTON,
@@ -47,7 +48,8 @@ export class QuestionsInteractionCollector {
     @InjectCauseEvent()
     private readonly causeInteraction: ChatInputCommandInteraction,
     @InjectModel(Question.name) private readonly questionModel: Model<Question>,
-    private readonly baseQuestionsCommand: BaseQuestionsCommand
+    private readonly baseQuestionsCommand: BaseQuestionsCommand,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: WinstonLogger
   ) {}
 
   @Filter()
@@ -67,6 +69,8 @@ export class QuestionsInteractionCollector {
   ): Promise<void> {
     selectedQuestionId = interaction.values[0]
     const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
+
+    this.logger.log(`${interaction.user.username} selected a question: ${selectedQuestion.title}`)
 
     const watchButton = new ButtonBuilder()
       .setCustomId(WATCH_BUTTON)
@@ -91,6 +95,8 @@ export class QuestionsInteractionCollector {
   }
 
   private async handleWatchButtonInteraction(interaction: ButtonInteraction): Promise<void> {
+    this.logger.log(`${interaction.user.username} clicked to watch button`)
+
     const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
     const videoLink = `https://www.youtube.com/watch?v=${selectedQuestion.videoId}&t=${selectedQuestion.startTime.minute}m${selectedQuestion.startTime.second}s`
 
@@ -101,6 +107,8 @@ export class QuestionsInteractionCollector {
   }
 
   private async handleListenButtonInteraction(interaction: ButtonInteraction): Promise<void> {
+    this.logger.log(`${interaction.user.username} clicked to listen button`)
+
     if (!(interaction.member as GuildMember).voice.channelId) {
       await interaction.reply({
         content: `Sorunun yanıtını dinleyebilmek için bir ses kanalına katılmalısın!`,

@@ -1,5 +1,9 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { Param, ParamType } from '@discord-nestjs/core'
+import { InjectModel } from '@nestjs/mongoose'
+import { Question, QuestionDocument } from '../../../database/schemas'
+import { Model } from 'mongoose'
+import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
 import {
   NEXT_PAGE_BUTTON,
   PREVIOUS_PAGE_BUTTON,
@@ -18,9 +22,6 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder
 } from 'discord.js'
-import { InjectModel } from '@nestjs/mongoose'
-import { Question, QuestionDocument } from '../../../database/schemas'
-import { Model } from 'mongoose'
 
 export class QuestionsDto {
   @Param({
@@ -36,7 +37,10 @@ export class BaseQuestionsCommand {
   private currentPage = 0
   private searchKeyword = ''
 
-  constructor(@InjectModel(Question.name) private readonly questionModel: Model<Question>) {}
+  constructor(
+    @InjectModel(Question.name) private readonly questionModel: Model<Question>,
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private readonly logger: WinstonLogger
+  ) {}
 
   public async run(
     interaction: MessageComponentInteraction | CommandInteraction,
@@ -45,19 +49,26 @@ export class BaseQuestionsCommand {
     if (options.searchKeyword) this.searchKeyword = options.searchKeyword
     if (options.addToCurrentPage) this.currentPage += options.addToCurrentPage
 
+    this.logger.log(
+      `Questions command used by "${interaction.user.username} for page "${this.currentPage}"
+       ${options.searchKeyword ? ` with "${options.searchKeyword}" keyword` : ''}`
+    )
+
+    await interaction.deferReply({ ephemeral: true })
+
     const { questions, totalQuestionCount } = await this.getQuestions()
 
     if (!questions.length) {
       if (this.searchKeyword) {
-        await interaction.reply({
-          content: `**${this.searchKeyword}** için bir sonuç bulunamadı!`,
-          ephemeral: true
+        await interaction.editReply({
+          content: `**${this.searchKeyword}** için bir sonuç bulunamadı!`
         })
         return
       }
-      await interaction.reply({
-        content: `Bir sonuç bulunamadı!`,
-        ephemeral: true
+
+      this.logger.error(new Error('No questions found in database!'))
+      await interaction.editReply({
+        content: `Bir sonuç bulunamadı!`
       })
       return
     }
@@ -66,10 +77,9 @@ export class BaseQuestionsCommand {
     const buttonRow = this.buildButtonRow(this.currentPage, questions.length, totalQuestionCount)
     const selectionRow = this.buildSelectionRow(questions)
 
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
-      components: [buttonRow, selectionRow],
-      ephemeral: true
+      components: [buttonRow, selectionRow]
     })
   }
 
