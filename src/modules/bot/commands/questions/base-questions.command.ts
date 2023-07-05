@@ -50,8 +50,8 @@ export class BaseQuestionsCommand {
     if (options.addToCurrentPage) this.currentPage += options.addToCurrentPage
 
     this.logger.log(
-      `Questions command used by "${interaction.user.username} for page "${this.currentPage}"
-       ${options.searchKeyword ? ` with "${options.searchKeyword}" keyword` : ''}`
+      `Questions command used by "${interaction.user.username}" for page "${this.currentPage}"
+       ${this.searchKeyword.length > 0 ? ` with "${this.searchKeyword}" keyword` : ''}`
     )
 
     await interaction.deferReply({ ephemeral: true })

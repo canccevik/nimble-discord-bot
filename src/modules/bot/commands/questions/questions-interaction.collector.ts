@@ -70,7 +70,7 @@ export class QuestionsInteractionCollector {
     selectedQuestionId = interaction.values[0]
     const selectedQuestion = await this.questionModel.findById(selectedQuestionId)
 
-    this.logger.log(`${interaction.user.username} selected a question: ${selectedQuestion.title}`)
+    this.logger.log(`${interaction.user.username} selected a question: "${selectedQuestion.title}"`)
 
     const watchButton = new ButtonBuilder()
       .setCustomId(WATCH_BUTTON)
