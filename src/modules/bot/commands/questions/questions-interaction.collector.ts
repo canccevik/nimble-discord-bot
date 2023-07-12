@@ -9,6 +9,7 @@ import { Model } from 'mongoose'
 import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
 import {
   LISTEN_BUTTON,
+  STOP_BUTTON,
   NEXT_PAGE_BUTTON,
   PREVIOUS_PAGE_BUTTON,
   SELECTION_MENU,
@@ -40,9 +41,14 @@ export class QuestionsInteractionCollector {
     [SELECTION_MENU]: this.handleSelectMenuInteraction.bind(this),
     [WATCH_BUTTON]: this.handleWatchButtonInteraction.bind(this),
     [LISTEN_BUTTON]: this.handleListenButtonInteraction.bind(this),
+    // [STOP_BUTTON]: this.stopButtonInteraction.bind(this),
     [NEXT_PAGE_BUTTON]: this.handleNextPageButtonInteraction.bind(this),
     [PREVIOUS_PAGE_BUTTON]: this.handlePreviousPageButtonInteraction.bind(this)
   }
+
+  private stopButton: ButtonBuilder
+  private watchButton: ButtonBuilder
+  private listenButton: ButtonBuilder
 
   constructor(
     @InjectCauseEvent()
@@ -72,19 +78,26 @@ export class QuestionsInteractionCollector {
 
     this.logger.log(`${interaction.user.username} selected a question: "${selectedQuestion.title}"`)
 
-    const watchButton = new ButtonBuilder()
+    this.watchButton = new ButtonBuilder()
       .setCustomId(WATCH_BUTTON)
       .setLabel('İzle')
       .setStyle(ButtonStyle.Primary)
 
-    const listenButton = new ButtonBuilder()
+    this.listenButton = new ButtonBuilder()
       .setCustomId(LISTEN_BUTTON)
       .setLabel('Dinle')
       .setStyle(ButtonStyle.Success)
 
+    this.stopButton = new ButtonBuilder()
+      .setCustomId(STOP_BUTTON)
+      .setLabel('Durdur')
+      .setStyle(ButtonStyle.Danger)
+      .setDisabled(true)
+
     const buttonRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
-      watchButton,
-      listenButton
+      this.watchButton,
+      this.listenButton,
+      this.stopButton
     )
 
     await interaction.reply({
@@ -155,13 +168,21 @@ export class QuestionsInteractionCollector {
       }, answerTimeInMilliseconds)
     }
 
+    this.stopButton.setDisabled(false)
+    const buttonRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+      this.watchButton,
+      this.listenButton,
+      this.stopButton
+    )
+
     await interaction.reply({
       content: `Şu sorunun yanıtı ses kanalında oynatılıyor: **${selectedQuestion.title}** \n\n${
         !selectedQuestion.endTime.minute || !selectedQuestion.endTime.second
           ? '🚨 Uyarı: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
           : ''
       }`,
-      ephemeral: true
+      ephemeral: true,
+      components: [buttonRow]
     })
   }
 
