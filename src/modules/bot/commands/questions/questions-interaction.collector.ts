@@ -1,6 +1,6 @@
 import * as play from 'play-dl'
 import { Inject, Injectable, Scope } from '@nestjs/common'
-import { joinVoiceChannel } from '@discordjs/voice'
+import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
 import { BaseQuestionsCommand } from './base-questions.command'
 import { InjectModel } from '@nestjs/mongoose'
@@ -28,6 +28,7 @@ import {
   ButtonStyle,
   ChatInputCommandInteraction,
   GuildMember,
+  InteractionResponse,
   MessageActionRowComponentBuilder,
   StringSelectMenuInteraction
 } from 'discord.js'
@@ -41,7 +42,7 @@ export class QuestionsInteractionCollector {
     [SELECTION_MENU]: this.handleSelectMenuInteraction.bind(this),
     [WATCH_BUTTON]: this.handleWatchButtonInteraction.bind(this),
     [LISTEN_BUTTON]: this.handleListenButtonInteraction.bind(this),
-    // [STOP_BUTTON]: this.stopButtonInteraction.bind(this),
+    [STOP_BUTTON]: this.stopButtonInteraction.bind(this),
     [NEXT_PAGE_BUTTON]: this.handleNextPageButtonInteraction.bind(this),
     [PREVIOUS_PAGE_BUTTON]: this.handlePreviousPageButtonInteraction.bind(this)
   }
@@ -183,6 +184,30 @@ export class QuestionsInteractionCollector {
       }`,
       ephemeral: true,
       components: [buttonRow]
+    })
+  }
+
+  private async stopButtonInteraction(
+    interaction: ButtonInteraction
+  ): Promise<InteractionResponse<boolean>> {
+    this.logger.log(`${interaction.user.username} clicked to stop button`)
+
+    const voiceConnection = getVoiceConnection(interaction.guildId)
+
+    if (!voiceConnection) {
+      return await interaction.reply({
+        content: `Zaten bir ses kanalında değilim!`,
+        ephemeral: true
+      })
+    }
+
+    if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
+
+    voiceConnection.destroy()
+
+    return await interaction.reply({
+      content: 'Ses kanalından ayrıldım!',
+      ephemeral: true
     })
   }
 
