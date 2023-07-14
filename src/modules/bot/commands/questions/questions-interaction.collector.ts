@@ -28,7 +28,6 @@ import {
   ButtonStyle,
   ChatInputCommandInteraction,
   GuildMember,
-  InteractionResponse,
   MessageActionRowComponentBuilder,
   StringSelectMenuInteraction
 } from 'discord.js'
@@ -42,14 +41,10 @@ export class QuestionsInteractionCollector {
     [SELECTION_MENU]: this.handleSelectMenuInteraction.bind(this),
     [WATCH_BUTTON]: this.handleWatchButtonInteraction.bind(this),
     [LISTEN_BUTTON]: this.handleListenButtonInteraction.bind(this),
-    [STOP_BUTTON]: this.stopButtonInteraction.bind(this),
+    [STOP_BUTTON]: this.handleStopButtonInteraction.bind(this),
     [NEXT_PAGE_BUTTON]: this.handleNextPageButtonInteraction.bind(this),
     [PREVIOUS_PAGE_BUTTON]: this.handlePreviousPageButtonInteraction.bind(this)
   }
-
-  private stopButton: ButtonBuilder
-  private watchButton: ButtonBuilder
-  private listenButton: ButtonBuilder
 
   constructor(
     @InjectCauseEvent()
@@ -79,26 +74,19 @@ export class QuestionsInteractionCollector {
 
     this.logger.log(`${interaction.user.username} selected a question: "${selectedQuestion.title}"`)
 
-    this.watchButton = new ButtonBuilder()
+    const watchButton = new ButtonBuilder()
       .setCustomId(WATCH_BUTTON)
       .setLabel('İzle')
       .setStyle(ButtonStyle.Primary)
 
-    this.listenButton = new ButtonBuilder()
+    const listenButton = new ButtonBuilder()
       .setCustomId(LISTEN_BUTTON)
       .setLabel('Dinle')
       .setStyle(ButtonStyle.Success)
 
-    this.stopButton = new ButtonBuilder()
-      .setCustomId(STOP_BUTTON)
-      .setLabel('Durdur')
-      .setStyle(ButtonStyle.Danger)
-      .setDisabled(true)
-
     const buttonRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
-      this.watchButton,
-      this.listenButton,
-      this.stopButton
+      watchButton,
+      listenButton
     )
 
     await interaction.reply({
@@ -169,11 +157,13 @@ export class QuestionsInteractionCollector {
       }, answerTimeInMilliseconds)
     }
 
-    this.stopButton.setDisabled(false)
+    const stopButton = new ButtonBuilder()
+      .setCustomId(STOP_BUTTON)
+      .setLabel('Durdur')
+      .setStyle(ButtonStyle.Danger)
+
     const buttonRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
-      this.watchButton,
-      this.listenButton,
-      this.stopButton
+      stopButton
     )
 
     await interaction.reply({
@@ -187,25 +177,24 @@ export class QuestionsInteractionCollector {
     })
   }
 
-  private async stopButtonInteraction(
-    interaction: ButtonInteraction
-  ): Promise<InteractionResponse<boolean>> {
+  private async handleStopButtonInteraction(interaction: ButtonInteraction): Promise<void> {
     this.logger.log(`${interaction.user.username} clicked to stop button`)
 
     const voiceConnection = getVoiceConnection(interaction.guildId)
 
     if (!voiceConnection) {
-      return await interaction.reply({
+      await interaction.reply({
         content: `Zaten bir ses kanalında değilim!`,
         ephemeral: true
       })
+      return
     }
 
     if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
 
     voiceConnection.destroy()
 
-    return await interaction.reply({
+    await interaction.reply({
       content: 'Ses kanalından ayrıldım!',
       ephemeral: true
     })
