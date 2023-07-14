@@ -1,6 +1,6 @@
 import * as play from 'play-dl'
 import { Inject, Injectable, Scope } from '@nestjs/common'
-import { joinVoiceChannel } from '@discordjs/voice'
+import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
 import { BaseQuestionsCommand } from './base-questions.command'
 import { InjectModel } from '@nestjs/mongoose'
@@ -9,6 +9,7 @@ import { Model } from 'mongoose'
 import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
 import {
   LISTEN_BUTTON,
+  STOP_BUTTON,
   NEXT_PAGE_BUTTON,
   PREVIOUS_PAGE_BUTTON,
   SELECTION_MENU,
@@ -40,6 +41,7 @@ export class QuestionsInteractionCollector {
     [SELECTION_MENU]: this.handleSelectMenuInteraction.bind(this),
     [WATCH_BUTTON]: this.handleWatchButtonInteraction.bind(this),
     [LISTEN_BUTTON]: this.handleListenButtonInteraction.bind(this),
+    [STOP_BUTTON]: this.handleStopButtonInteraction.bind(this),
     [NEXT_PAGE_BUTTON]: this.handleNextPageButtonInteraction.bind(this),
     [PREVIOUS_PAGE_BUTTON]: this.handlePreviousPageButtonInteraction.bind(this)
   }
@@ -155,12 +157,45 @@ export class QuestionsInteractionCollector {
       }, answerTimeInMilliseconds)
     }
 
+    const stopButton = new ButtonBuilder()
+      .setCustomId(STOP_BUTTON)
+      .setLabel('Durdur')
+      .setStyle(ButtonStyle.Danger)
+
+    const buttonRow = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+      stopButton
+    )
+
     await interaction.reply({
       content: `Şu sorunun yanıtı ses kanalında oynatılıyor: **${selectedQuestion.title}** \n\n${
         !selectedQuestion.endTime.minute || !selectedQuestion.endTime.second
           ? '🚨 Uyarı: Bu sorunun bitiş süresi bulunamadı. Ses video bitene kadar oynamaya devam edecek.'
           : ''
       }`,
+      ephemeral: true,
+      components: [buttonRow]
+    })
+  }
+
+  private async handleStopButtonInteraction(interaction: ButtonInteraction): Promise<void> {
+    this.logger.log(`${interaction.user.username} clicked to stop button`)
+
+    const voiceConnection = getVoiceConnection(interaction.guildId)
+
+    if (!voiceConnection) {
+      await interaction.reply({
+        content: `Zaten bir ses kanalında değilim!`,
+        ephemeral: true
+      })
+      return
+    }
+
+    if (voiceConnection.state.status === VoiceConnectionStatus.Destroyed) return
+
+    voiceConnection.destroy()
+
+    await interaction.reply({
+      content: 'Ses kanalından ayrıldım!',
       ephemeral: true
     })
   }
