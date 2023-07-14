@@ -2,10 +2,9 @@ import { Module } from '@nestjs/common'
 import { EnvalidModule } from 'nestjs-envalid'
 import { validators } from '../config'
 import { DiscordModule } from './discord/discord.module'
-import { BotModule } from './bot/bot.module'
 import { DatabaseModule } from './database/database.module'
-import { YouTubeModule } from './youtube/youtube.module'
 import { LoggerModule } from './logger/logger.module'
+import { FeaturesModule } from 'src/features/features.module'
 
 @Module({
   imports: [
@@ -14,11 +13,10 @@ import { LoggerModule } from './logger/logger.module'
       useDotenv: true,
       isGlobal: true
     }),
+    FeaturesModule,
     LoggerModule,
     DatabaseModule,
-    YouTubeModule,
-    DiscordModule,
-    BotModule
+    DiscordModule
   ]
 })
 export class AppModule {}

@@ -3,8 +3,8 @@ import { Inject, Injectable } from '@nestjs/common'
 import { VideoIdListResponse, VideoListResponse } from './interfaces'
 import axios from 'axios'
 import { InjectModel } from '@nestjs/mongoose'
-import { Question } from '../database/schemas'
 import { Model } from 'mongoose'
+import { Question } from '../../modules/database/schemas'
 
 @Injectable()
 export class YouTubeService {

@@ -4,9 +4,9 @@ import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice'
 import { Filter, InjectCauseEvent, InteractionEventCollector, On } from '@discord-nestjs/core'
 import { BaseQuestionsCommand } from './base-questions.command'
 import { InjectModel } from '@nestjs/mongoose'
-import { Question } from '../../../database/schemas'
 import { Model } from 'mongoose'
 import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
+import { Question } from '../../../../modules/database/schemas'
 import {
   LISTEN_BUTTON,
   STOP_BUTTON,

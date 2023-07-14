@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { Param, ParamType } from '@discord-nestjs/core'
 import { InjectModel } from '@nestjs/mongoose'
-import { Question, QuestionDocument } from '../../../database/schemas'
 import { Model } from 'mongoose'
 import { WINSTON_MODULE_NEST_PROVIDER, WinstonLogger } from 'nest-winston'
+import { Question, QuestionDocument } from '../../../../modules/database/schemas'
 import {
   NEXT_PAGE_BUTTON,
   PREVIOUS_PAGE_BUTTON,
